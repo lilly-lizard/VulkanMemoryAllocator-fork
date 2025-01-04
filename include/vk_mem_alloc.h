@@ -1052,9 +1052,9 @@ typedef struct VmaVulkanFunctions
 #endif
 #if VMA_KHR_MAINTENANCE4 || VMA_VULKAN_VERSION >= 1003000
     /// Fetch from "vkGetDeviceBufferMemoryRequirements" on Vulkan >= 1.3, but you can also fetch it from "vkGetDeviceBufferMemoryRequirementsKHR" if you enabled extension VK_KHR_maintenance4.
-    PFN_vkGetDeviceBufferMemoryRequirementsKHR VMA_NULLABLE vkGetDeviceBufferMemoryRequirements;
+    PFN_vkGetDeviceBufferMemoryRequirementsKHR VMA_NULLABLE vkGetDeviceBufferMemoryRequirementsKHR;
     /// Fetch from "vkGetDeviceImageMemoryRequirements" on Vulkan >= 1.3, but you can also fetch it from "vkGetDeviceImageMemoryRequirementsKHR" if you enabled extension VK_KHR_maintenance4.
-    PFN_vkGetDeviceImageMemoryRequirementsKHR VMA_NULLABLE vkGetDeviceImageMemoryRequirements;
+    PFN_vkGetDeviceImageMemoryRequirementsKHR VMA_NULLABLE vkGetDeviceImageMemoryRequirementsKHR;
 #endif
 #if VMA_EXTERNAL_MEMORY_WIN32
     PFN_vkGetMemoryWin32HandleKHR VMA_NULLABLE vkGetMemoryWin32HandleKHR;
@@ -13193,8 +13193,8 @@ void VmaAllocator_T::ImportVulkanFunctions_Static()
 #if VMA_VULKAN_VERSION >= 1003000
     if(m_VulkanApiVersion >= VK_MAKE_VERSION(1, 3, 0))
     {
-        m_VulkanFunctions.vkGetDeviceBufferMemoryRequirements = (PFN_vkGetDeviceBufferMemoryRequirements)vkGetDeviceBufferMemoryRequirements;
-        m_VulkanFunctions.vkGetDeviceImageMemoryRequirements = (PFN_vkGetDeviceImageMemoryRequirements)vkGetDeviceImageMemoryRequirements;
+        m_VulkanFunctions.vkGetDeviceBufferMemoryRequirementsKHR = (PFN_vkGetDeviceBufferMemoryRequirements)vkGetDeviceBufferMemoryRequirements;
+        m_VulkanFunctions.vkGetDeviceImageMemoryRequirementsKHR = (PFN_vkGetDeviceImageMemoryRequirements)vkGetDeviceImageMemoryRequirements;
     }
 #endif
 }
@@ -13243,8 +13243,8 @@ void VmaAllocator_T::ImportVulkanFunctions_Custom(const VmaVulkanFunctions* pVul
 #endif
 
 #if VMA_KHR_MAINTENANCE4 || VMA_VULKAN_VERSION >= 1003000
-    VMA_COPY_IF_NOT_NULL(vkGetDeviceBufferMemoryRequirements);
-    VMA_COPY_IF_NOT_NULL(vkGetDeviceImageMemoryRequirements);
+    VMA_COPY_IF_NOT_NULL(vkGetDeviceBufferMemoryRequirementsKHR);
+    VMA_COPY_IF_NOT_NULL(vkGetDeviceImageMemoryRequirementsKHR);
 #endif
 #if VMA_EXTERNAL_MEMORY_WIN32
     VMA_COPY_IF_NOT_NULL(vkGetMemoryWin32HandleKHR);
@@ -13339,15 +13339,15 @@ void VmaAllocator_T::ImportVulkanFunctions_Dynamic()
 #if VMA_VULKAN_VERSION >= 1003000
     if(m_VulkanApiVersion >= VK_MAKE_VERSION(1, 3, 0))
     {
-        VMA_FETCH_DEVICE_FUNC(vkGetDeviceBufferMemoryRequirements, PFN_vkGetDeviceBufferMemoryRequirements, "vkGetDeviceBufferMemoryRequirements");
-        VMA_FETCH_DEVICE_FUNC(vkGetDeviceImageMemoryRequirements, PFN_vkGetDeviceImageMemoryRequirements, "vkGetDeviceImageMemoryRequirements");
+        VMA_FETCH_DEVICE_FUNC(vkGetDeviceBufferMemoryRequirementsKHR, PFN_vkGetDeviceBufferMemoryRequirements, "vkGetDeviceBufferMemoryRequirements");
+        VMA_FETCH_DEVICE_FUNC(vkGetDeviceImageMemoryRequirementsKHR, PFN_vkGetDeviceImageMemoryRequirements, "vkGetDeviceImageMemoryRequirements");
     }
 #endif
 #if VMA_KHR_MAINTENANCE4
     if(m_UseKhrMaintenance4)
     {
-        VMA_FETCH_DEVICE_FUNC(vkGetDeviceBufferMemoryRequirements, PFN_vkGetDeviceBufferMemoryRequirementsKHR, "vkGetDeviceBufferMemoryRequirementsKHR");
-        VMA_FETCH_DEVICE_FUNC(vkGetDeviceImageMemoryRequirements, PFN_vkGetDeviceImageMemoryRequirementsKHR, "vkGetDeviceImageMemoryRequirementsKHR");
+        VMA_FETCH_DEVICE_FUNC(vkGetDeviceBufferMemoryRequirementsKHR, PFN_vkGetDeviceBufferMemoryRequirementsKHR, "vkGetDeviceBufferMemoryRequirementsKHR");
+        VMA_FETCH_DEVICE_FUNC(vkGetDeviceImageMemoryRequirementsKHR, PFN_vkGetDeviceImageMemoryRequirementsKHR, "vkGetDeviceImageMemoryRequirementsKHR");
     }
 #endif
 #if VMA_EXTERNAL_MEMORY_WIN32
@@ -13410,13 +13410,13 @@ void VmaAllocator_T::ValidateVulkanFunctions()
         VMA_ASSERT(m_VulkanFunctions.vkGetMemoryWin32HandleKHR != VMA_NULL);
     }
 #endif
-
-    // Not validating these due to suspected driver bugs with these function
-    // pointers being null despite correct extension or Vulkan version is enabled.
-    // See issue #397. Their usage in VMA is optional anyway.
-    //
-    // VMA_ASSERT(m_VulkanFunctions.vkGetDeviceBufferMemoryRequirements != VMA_NULL);
-    // VMA_ASSERT(m_VulkanFunctions.vkGetDeviceImageMemoryRequirements != VMA_NULL);
+#if VMA_KHR_MAINTENANCE4 || VMA_VULKAN_VERSION >= 1003000
+    if(m_UseKhrMaintenance4 || m_VulkanApiVersion >= VK_MAKE_VERSION(1, 3, 0))
+    {
+        VMA_ASSERT(m_VulkanFunctions.vkGetDeviceBufferMemoryRequirementsKHR != VMA_NULL);
+        VMA_ASSERT(m_VulkanFunctions.vkGetDeviceImageMemoryRequirementsKHR != VMA_NULL);
+    }
+#endif
 }
 
 VkDeviceSize VmaAllocator_T::CalcPreferredBlockSize(uint32_t memTypeIndex)
@@ -15386,14 +15386,14 @@ VMA_CALL_PRE VkResult VMA_CALL_POST vmaFindMemoryTypeIndexForBufferInfo(
     VkResult res;
 
 #if VMA_KHR_MAINTENANCE4 || VMA_VULKAN_VERSION >= 1003000
-    if(funcs->vkGetDeviceBufferMemoryRequirements)
+    if(funcs->vkGetDeviceBufferMemoryRequirementsKHR)
     {
         // Can query straight from VkBufferCreateInfo :)
         VkDeviceBufferMemoryRequirementsKHR devBufMemReq = {VK_STRUCTURE_TYPE_DEVICE_BUFFER_MEMORY_REQUIREMENTS_KHR};
         devBufMemReq.pCreateInfo = pBufferCreateInfo;
 
         VkMemoryRequirements2 memReq = {VK_STRUCTURE_TYPE_MEMORY_REQUIREMENTS_2};
-        (*funcs->vkGetDeviceBufferMemoryRequirements)(hDev, &devBufMemReq, &memReq);
+        (*funcs->vkGetDeviceBufferMemoryRequirementsKHR)(hDev, &devBufMemReq, &memReq);
 
         res = allocator->FindMemoryTypeIndex(
             memReq.memoryRequirements.memoryTypeBits, pAllocationCreateInfo,
@@ -15438,7 +15438,7 @@ VMA_CALL_PRE VkResult VMA_CALL_POST vmaFindMemoryTypeIndexForImageInfo(
     VkResult res;
 
 #if VMA_KHR_MAINTENANCE4 || VMA_VULKAN_VERSION >= 1003000
-    if(funcs->vkGetDeviceImageMemoryRequirements)
+    if(funcs->vkGetDeviceImageMemoryRequirementsKHR)
     {
         // Can query straight from VkImageCreateInfo :)
         VkDeviceImageMemoryRequirementsKHR devImgMemReq = {VK_STRUCTURE_TYPE_DEVICE_IMAGE_MEMORY_REQUIREMENTS_KHR};
@@ -15447,7 +15447,7 @@ VMA_CALL_PRE VkResult VMA_CALL_POST vmaFindMemoryTypeIndexForImageInfo(
             "Cannot use this VkImageCreateInfo with vmaFindMemoryTypeIndexForImageInfo as I don't know what to pass as VkDeviceImageMemoryRequirements::planeAspect.");
 
         VkMemoryRequirements2 memReq = {VK_STRUCTURE_TYPE_MEMORY_REQUIREMENTS_2};
-        (*funcs->vkGetDeviceImageMemoryRequirements)(hDev, &devImgMemReq, &memReq);
+        (*funcs->vkGetDeviceImageMemoryRequirementsKHR)(hDev, &devImgMemReq, &memReq);
 
         res = allocator->FindMemoryTypeIndex(
             memReq.memoryRequirements.memoryTypeBits, pAllocationCreateInfo,
