@@ -13293,30 +13293,23 @@ void VmaAllocator_T::ImportVulkanFunctions_Dynamic()
     {
         VMA_FETCH_DEVICE_FUNC(vkGetBufferMemoryRequirements2KHR, PFN_vkGetBufferMemoryRequirements2, "vkGetBufferMemoryRequirements2");
         VMA_FETCH_DEVICE_FUNC(vkGetImageMemoryRequirements2KHR, PFN_vkGetImageMemoryRequirements2, "vkGetImageMemoryRequirements2");
-        VMA_FETCH_DEVICE_FUNC(vkBindBufferMemory2KHR, PFN_vkBindBufferMemory2, "vkBindBufferMemory2");
-        VMA_FETCH_DEVICE_FUNC(vkBindImageMemory2KHR, PFN_vkBindImageMemory2, "vkBindImageMemory2");
     }
-#endif
-
-#if VMA_MEMORY_BUDGET || VMA_VULKAN_VERSION >= 1001000
-    if(m_VulkanApiVersion >= VK_MAKE_VERSION(1, 1, 0))
-    {
-        VMA_FETCH_INSTANCE_FUNC(vkGetPhysicalDeviceMemoryProperties2KHR, PFN_vkGetPhysicalDeviceMemoryProperties2KHR, "vkGetPhysicalDeviceMemoryProperties2");
-    }
-    else if(m_UseExtMemoryBudget)
-    {
-        VMA_FETCH_INSTANCE_FUNC(vkGetPhysicalDeviceMemoryProperties2KHR, PFN_vkGetPhysicalDeviceMemoryProperties2KHR, "vkGetPhysicalDeviceMemoryProperties2KHR");
-    }
-#endif
-
+#endif // #if VMA_VULKAN_VERSION >= 1001000
 #if VMA_DEDICATED_ALLOCATION
     if(m_UseKhrDedicatedAllocation)
     {
         VMA_FETCH_DEVICE_FUNC(vkGetBufferMemoryRequirements2KHR, PFN_vkGetBufferMemoryRequirements2KHR, "vkGetBufferMemoryRequirements2KHR");
         VMA_FETCH_DEVICE_FUNC(vkGetImageMemoryRequirements2KHR, PFN_vkGetImageMemoryRequirements2KHR, "vkGetImageMemoryRequirements2KHR");
     }
-#endif
+#endif // #if VMA_DEDICATED_ALLOCATION
 
+#if VMA_VULKAN_VERSION >= 1001000
+    if(m_VulkanApiVersion >= VK_MAKE_VERSION(1, 1, 0))
+    {
+        VMA_FETCH_DEVICE_FUNC(vkBindBufferMemory2KHR, PFN_vkBindBufferMemory2, "vkBindBufferMemory2");
+        VMA_FETCH_DEVICE_FUNC(vkBindImageMemory2KHR, PFN_vkBindImageMemory2, "vkBindImageMemory2");
+    }
+#endif // #if VMA_VULKAN_VERSION >= 1001000
 #if VMA_BIND_MEMORY2
     if(m_UseKhrBindMemory2)
     {
@@ -13325,12 +13318,14 @@ void VmaAllocator_T::ImportVulkanFunctions_Dynamic()
     }
 #endif // #if VMA_BIND_MEMORY2
 
-#if VMA_MEMORY_BUDGET || VMA_VULKAN_VERSION >= 1001000
+#if VMA_VULKAN_VERSION >= 1001000
     if(m_VulkanApiVersion >= VK_MAKE_VERSION(1, 1, 0))
     {
         VMA_FETCH_INSTANCE_FUNC(vkGetPhysicalDeviceMemoryProperties2KHR, PFN_vkGetPhysicalDeviceMemoryProperties2KHR, "vkGetPhysicalDeviceMemoryProperties2");
     }
-    else if(m_UseExtMemoryBudget)
+#endif // VMA_VULKAN_VERSION >= 1001000
+#if VMA_MEMORY_BUDGET
+    if(m_UseExtMemoryBudget)
     {
         VMA_FETCH_INSTANCE_FUNC(vkGetPhysicalDeviceMemoryProperties2KHR, PFN_vkGetPhysicalDeviceMemoryProperties2KHR, "vkGetPhysicalDeviceMemoryProperties2KHR");
     }
@@ -13342,20 +13337,21 @@ void VmaAllocator_T::ImportVulkanFunctions_Dynamic()
         VMA_FETCH_DEVICE_FUNC(vkGetDeviceBufferMemoryRequirementsKHR, PFN_vkGetDeviceBufferMemoryRequirements, "vkGetDeviceBufferMemoryRequirements");
         VMA_FETCH_DEVICE_FUNC(vkGetDeviceImageMemoryRequirementsKHR, PFN_vkGetDeviceImageMemoryRequirements, "vkGetDeviceImageMemoryRequirements");
     }
-#endif
+#endif // #if VMA_VULKAN_VERSION >= 1003000
 #if VMA_KHR_MAINTENANCE4
     if(m_UseKhrMaintenance4)
     {
         VMA_FETCH_DEVICE_FUNC(vkGetDeviceBufferMemoryRequirementsKHR, PFN_vkGetDeviceBufferMemoryRequirementsKHR, "vkGetDeviceBufferMemoryRequirementsKHR");
         VMA_FETCH_DEVICE_FUNC(vkGetDeviceImageMemoryRequirementsKHR, PFN_vkGetDeviceImageMemoryRequirementsKHR, "vkGetDeviceImageMemoryRequirementsKHR");
     }
-#endif
+#endif // #if VMA_KHR_MAINTENANCE4
+
 #if VMA_EXTERNAL_MEMORY_WIN32
     if (m_UseKhrExternalMemoryWin32)
     {
         VMA_FETCH_DEVICE_FUNC(vkGetMemoryWin32HandleKHR, PFN_vkGetMemoryWin32HandleKHR, "vkGetMemoryWin32HandleKHR");
     }
-#endif
+#endif // #if VMA_EXTERNAL_MEMORY_WIN32
 #undef VMA_FETCH_DEVICE_FUNC
 #undef VMA_FETCH_INSTANCE_FUNC
 }
